@@ -14,6 +14,7 @@ var parser = sax.createStream();
 var Node = function() {
   this.type = "";
   this.tag = "";
+  this.className = "";
   this.contents = "";
   this.children = [];
   this.attributes = {};
@@ -44,6 +45,7 @@ parser.on("opentag", function(node) {
   for (var a in node.attributes) {
     element.attributes[a.toLowerCase()] = node.attributes[a];
   }
+  element.className = node.attributes.CLASS || "";
   current.addChild(element);
   current = element;
 });
@@ -96,6 +98,7 @@ parser.on("end", function() {
   var cull = function(node) {
     if (
       node.attributes.channel == "!" || 
+      node.className.match(/@notes/) || 
       (node.type == "element" && !node.children.length) ||
       node.tag == "annotation") {
       node.parent.removeChild(node);
@@ -115,9 +118,16 @@ parser.on("end", function() {
     any: node => node.contents
   };
 
+  var prune = function(node) {
+    node.children = node.children.filter(n => !(n.type == "text" && !n.contents.trim()));
+    if (node.tag == "p" && node.children.length == 0) {
+      node.parent.removeChild(node);
+    }
+  };
+
   var enter = node => out += (formatters[node.tag] || formatters.any)(node);
 
-  walk(tree, cull);
+  walk(tree, cull, prune);
 
   walk(tree, enter);
 
