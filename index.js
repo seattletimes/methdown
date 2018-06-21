@@ -7,8 +7,11 @@ var fs = require("fs");
 
 var args = minimist(process.argv);
 
-var input = args.i ? fs.createReadStream(args.i) : process.stdin;
-var output = args.o ? fs.createWriteStream(args.o) : process.stdout;
+var inputFilename = args.i || args._[2];
+var outputFilename = args.o || args._[3];
+
+var input = inputFilename ? fs.createReadStream(inputFilename) : process.stdin;
+var output = outputFilename ? fs.createWriteStream(outputFilename) : process.stdout;
 var parser = sax.createStream();
 
 var Node = function() {
